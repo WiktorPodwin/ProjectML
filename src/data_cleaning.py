@@ -25,18 +25,18 @@ class DataPreProcessStrategy(DataStrategy):
         Preprocess data
         """
         try:
-            data['sbp'].fillna(data['sbp'].median(), inplace=True)
-            data['tobacco'].fillna(data['tobacco'].median(), inplace=True)
-            data['ldl'].fillna(data['ldl'].median(), inplace=True)
-            data['adiposity'].fillna(data['adoposity'].median(), inplace=True)
+            data.fillna(data['sbp'].median(), inplace=True)
+            data.fillna(data['tobacco'].median(), inplace=True)
+            data.fillna(data['ldl'].median(), inplace=True)
+            data.fillna(data['adiposity'].median(), inplace=True)
             data.dropna(subset=['famhist'])
-            data['typea'].fillna(data['typea'].median(), inplace=True)
-            data['obesity'].fillna(data['obesity'].median(), inplace=True)
-            data['alcohol'].fillna(data['alcohol'].median(), inplace=True)
-            data['age'].fillna(data['age'].median(), inplace=True)
+            data.fillna(data['typea'].median(), inplace=True)
+            data.fillna(data['obesity'].median(), inplace=True)
+            data.fillna(data['alcohol'].median(), inplace=True)
+            data.fillna(data['age'].median(), inplace=True)
             data.dropna(subset=['chd'])
 
-            encoder = OneHotEncoder(sparse=False)
+            encoder = OneHotEncoder(sparse_output=False)
             famhist_encoded = encoder.fit_transform(data[['famhist']])
             famhist_encoded_df = pd.DataFrame(famhist_encoded, columns=encoder.get_feature_names_out(['famhist']))
             data = pd.concat([data, famhist_encoded_df], axis=1)
@@ -62,9 +62,10 @@ class DataSplitStrategy(DataStrategy):
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
             return X_train, X_test, y_train, y_test
         except Exception as e:
-            logging.error(f'Error with dividing data: {e}')
+            logging.error(f'Error while dividing data: {e}')
             raise e
         
+
 class DataCleaning:
     """
     Class for cleaning the data and deviding into train and test
@@ -82,8 +83,3 @@ class DataCleaning:
         except Exception as e:
             logging.error(f'Error with handling data: {e}')
             raise e
-        
-if __name__ == "__main__":
-    data = pd.read_csv('C:/Users/wpodw/Desktop/Wiktor/Programowanie/Git/ProjectML/data/SAHeart.csv')
-    data_cleaning = DataCleaning(data, DataPreProcessStrategy())
-    data_cleaning.handle_data() 
