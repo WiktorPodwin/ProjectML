@@ -1,0 +1,89 @@
+import logging 
+import pandas as pd
+from abc import ABC, abstractmethod
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+from typing import Union
+
+class DataStrategy(ABC):
+    """
+    Abstract class defining stratety for handling data
+    """
+
+    @abstractmethod
+    def handle_data(self, data: pd.DataFrame) -> Union[pd.DataFrame, pd.Series]:
+        pass
+
+class DataPreProcessStrategy(DataStrategy):
+    """
+    Strategy for processing data
+    """
+
+    def handle_data(self, data: pd.DataFrame) -> pd.DataFrame:
+        """
+        Preprocess data
+        """
+        try:
+            data['sbp'].fillna(data['sbp'].median(), inplace=True)
+            data['tobacco'].fillna(data['tobacco'].median(), inplace=True)
+            data['ldl'].fillna(data['ldl'].median(), inplace=True)
+            data['adiposity'].fillna(data['adoposity'].median(), inplace=True)
+            data.dropna(subset=['famhist'])
+            data['typea'].fillna(data['typea'].median(), inplace=True)
+            data['obesity'].fillna(data['obesity'].median(), inplace=True)
+            data['alcohol'].fillna(data['alcohol'].median(), inplace=True)
+            data['age'].fillna(data['age'].median(), inplace=True)
+            data.dropna(subset=['chd'])
+
+            encoder = OneHotEncoder(sparse=False)
+            famhist_encoded = encoder.fit_transform(data[['famhist']])
+            famhist_encoded_df = pd.DataFrame(famhist_encoded, columns=encoder.get_feature_names_out(['famhist']))
+            data = pd.concat([data, famhist_encoded_df], axis=1)
+            data.drop(columns=['famhist'], inplace=True)
+
+            data = data.select_dtypes(include=[np.number])
+            return data
+        except Exception as e:
+            logging.error(f'Error in processing data: {e}')
+            raise e
+        
+class DataSplitStrategy(DataStrategy):
+    """
+    Strategy for dividing data into train and test.
+    """
+    def handle_data(self, data: pd.DataFrame) -> Union[pd.DataFrame, pd.Series]:
+        """
+        Devide data into train and test
+        """
+        try:
+            X = data.drop(['chd'], axis=1)
+            y = data['chd']
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+            return X_train, X_test, y_train, y_test
+        except Exception as e:
+            logging.error(f'Error with dividing data: {e}')
+            raise e
+        
+class DataCleaning:
+    """
+    Class for cleaning the data and deviding into train and test
+    """
+    def __init__(self, data: pd.DataFrame, strategy: DataStrategy):
+        self.data = data
+        self.strategy = strategy
+    
+    def handle_data(self) -> Union[pd.DataFrame, pd.Series]:
+        """
+        Handle data
+        """
+        try:
+            return self.strategy.handle_data(self.data)
+        except Exception as e:
+            logging.error(f'Error with handling data: {e}')
+            raise e
+        
+if __name__ == "__main__":
+    data = pd.read_csv('C:/Users/wpodw/Desktop/Wiktor/Programowanie/Git/ProjectML/data/SAHeart.csv')
+    data_cleaning = DataCleaning(data, DataPreProcessStrategy())
+    data_cleaning.handle_data() 
