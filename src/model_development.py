@@ -1,5 +1,4 @@
 import logging
-import pandas as pd
 from abc import ABC, abstractmethod
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -27,14 +26,14 @@ class KNN(Model):
     """
 
     def train(self, X_train, y_train, **kwargs):
-         """
+        """
         Trains the model
         
         Args:
             X_train: Training data
             y_train: Training labels
         Returns:
-            None
+            classifier: The trained classifier
         """
         try:
             n_neighbors = kwargs.get('n_neighbors', 2)
