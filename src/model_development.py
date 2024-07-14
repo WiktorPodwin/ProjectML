@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from sklearn.neighbors import KNeighborsClassifier
+import pandas as pd
 
 class Model(ABC):
     """
@@ -25,7 +26,7 @@ class KNN(Model):
     K-Nearest Neighbors model
     """
 
-    def train(self, X_train, y_train, **kwargs):
+    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs) -> KNeighborsClassifier:
         """
         Trains the model
         
