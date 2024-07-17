@@ -4,4 +4,4 @@ class ModelNameConfig(BaseParameters):
     """
     Model configuration
     """
-    model_name: str = "KNeighborsClassifier"
+    name_of_model: str = "KNeighborsClassifier"
