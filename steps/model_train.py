@@ -7,14 +7,12 @@ from src.model_development import KNN
 from .config import ModelNameConfig
 from sklearn.base import ClassifierMixin
 
-# experiment_tracker = Client().active_stack.experiment_tracker
 client = Client()
 client.activate_stack("mlflow_stack_customer")
 
-# Pobranie experiment trackera
 experiment_tracker = client.active_stack.experiment_tracker
 
-@step(experiment_tracker=experiment_tracker.name)
+@step(experiment_tracker=experiment_tracker.name, enable_cache=False)
 def train_model(
     X_train: pd.DataFrame,
     X_test: pd.DataFrame,

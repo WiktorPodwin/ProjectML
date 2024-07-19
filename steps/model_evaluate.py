@@ -14,7 +14,7 @@ client.activate_stack("mlflow_stack_customer")
 
 experiment_tracker = client.active_stack.experiment_tracker
 
-@step(experiment_tracker=experiment_tracker.name)
+@step(experiment_tracker=experiment_tracker.name, enable_cache=False)
 def evaluate_model(model: ClassifierMixin,
                    X_test: pd.DataFrame,
                    y_test: pd.Series) -> Tuple[
