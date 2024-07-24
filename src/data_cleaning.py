@@ -36,12 +36,9 @@ class DataPreProcessStrategy(DataStrategy):
             data.fillna(data['age'].median(), inplace=True)
             data.dropna(subset=['chd'])
 
-            encoder = OneHotEncoder(sparse_output=False)
+            encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False).set_output(transform='pandas')
             famhist_encoded = encoder.fit_transform(data[['famhist']])
-            famhist_encoded_df = pd.DataFrame(famhist_encoded, columns=encoder.get_feature_names_out(['famhist']))
-            data = pd.concat([data, famhist_encoded_df], axis=1)
-            data.drop(columns=['famhist'], inplace=True)
-
+            data = pd.concat([data, famhist_encoded], axis=1).drop(columns=['famhist', 'row.names'])
             data = data.select_dtypes(include=[np.number])
             return data
         except Exception as e:

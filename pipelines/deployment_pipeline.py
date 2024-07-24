@@ -106,18 +106,22 @@ def predictor(
         "typea",
         "obesity",
         "alcohol",
-        "age"
+        "age",
+        "famhist_Absent",
+        "famhist_Present"
     ]
     df = pd.DataFrame(data["data"], columns=columns_for_df)
+    df = df.fillna('')
     json_list = json.loads(json.dumps(list(df.T.to_dict().values())))
     data = np.array(json_list)
+
     prediction = service.predict(data)
     return prediction
 
 
 @pipeline(enable_cache=False, settings={'docker': docker_settings})
 def continuous_deployment_pipeline(
-    data_path: str = "C:/Users/wpodw/Desktop/Wiktor/Programowanie/Git/ProjectML/data/SAHeart.csv",
+    data_path: str = "data/SAHeart.csv",
     min_accuracy: float = 0.6,
     workers: int = 1,
     timeout: int = DEFAULT_SERVICE_START_STOP_TIMEOUT

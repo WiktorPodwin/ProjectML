@@ -4,7 +4,7 @@ from src.data_cleaning import DataCleaning, DataPreProcessStrategy
 
 def get_data_for_test():
     try:
-        df = pd.read_csv("C:/Users/wpodw/Desktop/Wiktor/Programowanie/Git/ProjectML/data/SAHeart.csv")
+        df = pd.read_csv("data/SAHeart.csv")
         df = df.sample(n=100)
         process_strategy = DataPreProcessStrategy()
         data_cleaning = DataCleaning(df, process_strategy)

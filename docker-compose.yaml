@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  my_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8237:8237"
+    volumes:
+      - .:/usr/src/app
+    command: ["python", "run_deployment.py", "--config", "deploy_and_predict"]

@@ -5,6 +5,8 @@ from zenml.integrations.mlflow.mlflow_utils import get_tracking_uri
 from zenml.integrations.mlflow.model_deployers.mlflow_model_deployer import MLFlowModelDeployer
 from zenml.integrations.mlflow.services import MLFlowDeploymentService
 from typing import cast
+import subprocess
+import logging
 
 DEPLOY = 'deploy'
 PREDICT = 'predict'
@@ -45,9 +47,22 @@ def main(config: str, min_accuracy: float):
             pipeline_name="continuous_deployment_pipeline",
             pipeline_step_name="mlflow_model_deployer_step"
         )
-    
+        try:
+            zenml_result = subprocess.run(
+                ["zenml", "up"], 
+                check=True, 
+                text=True, 
+                capture_output=True)
+            
+            logging.info(
+                f"\nZenML Dashboard started successfully\n."
+                f"Command output:\n {zenml_result.stdout}")
+
+        except Exception as e:
+            logging.error(f"Command 'zenml up' failed with return code: {e}")
+            raise e
+        
     print(
-        f"{mlflow_model_deployer_component} = mlflow_model_deployer_component"
         "You can run:\n"
         f"[italic green]    mlflow ui --backend-store-ui '{get_tracking_uri()}'"
         "[/italic green]\n ... to inspect your experiment runs within the MLFlow"
@@ -82,7 +97,7 @@ def main(config: str, min_accuracy: float):
             )
     else:
         print(
-            f"{existing_services} = existing_services, No MLflow prediction server is currently running. The deployment "
+            "No MLflow prediction server is currently running. The deployment "
             "pipeline must run first to train a model and deploy it. Execute "
             "the same command with the --deploy argument to deploy a model."
         )
