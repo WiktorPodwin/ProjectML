@@ -3,7 +3,7 @@ import mlflow
 import pandas as pd
 from zenml import step
 from zenml.client import Client
-from src.model_development import KNN
+from src.model_development import KNN, LogisticRegressionModel, RandomForestModel, HyperparameterChoice
 from .config import ModelNameConfig
 from sklearn.base import ClassifierMixin
 
@@ -35,10 +35,24 @@ def train_model(
         if config.name_of_model == "KNeighborsClassifier":
             mlflow.sklearn.autolog()   
             model = KNN()
-            trained_model = model.train(X_train, y_train)
-            return trained_model
+        elif config.name_of_model == "LogisticRegression":
+            mlflow.sklearn.autolog()
+            model = LogisticRegressionModel()
+        elif config.name_of_model == "RandomForestClassifier":
+            mlflow.sklearn.autolog()
+            model = RandomForestModel()
         else:
             raise ValueError(f'Model not supported: {config.name_of_model}')
+        
+        tuner = HyperparameterChoice(model, X_train, y_train, X_test, y_test)
+
+        if config.fine_tuning == True:
+            best_parameters = tuner.optimize()
+            trained_model = model.train(X_train, y_train, **best_parameters)
+        else: 
+            trained_model = model.train(X_train, y_train)
+        return trained_model
+    
     except Exception as e:
         logging.error(f"Error in training model: {e}")
         raise e

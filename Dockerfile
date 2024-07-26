@@ -7,6 +7,7 @@ COPY . .
 RUN mkdir -p /tmp/alphafold
 
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install "zenml[server]"
 
 RUN zenml init 
 
