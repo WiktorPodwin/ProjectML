@@ -12,9 +12,9 @@ from steps.clean_data import clean_df
 from steps.ingest_data import ingest_df
 from steps.model_train import train_model
 from steps.model_evaluate import evaluate_model
-import json
-from .utils import get_data_for_test
-import logging
+from src import deployment_trigger_prepare, predictor_prepare
+from mongo_ops import MongoOperations
+from sklearn.base import ClassifierMixin
 
 docker_settings = DockerSettings(required_integrations=[MLFLOW])
 
@@ -24,20 +24,15 @@ class DeploymentTriggerConfig(BaseParameters):
     """
     min_accuracy: float = 0.6
 
-@step(enable_cache=False)
-def dynamic_importer() -> str:
-    data = get_data_for_test()
-    return data
 
 @step
-def deployment_trigger(
-    accuracy: float,
-    config: DeploymentTriggerConfig
-) -> bool:
+def deployment_trigger(config: DeploymentTriggerConfig) -> bool:
     """
     Implements a single model deployment trigger that looks at the input model accuracy and decides, if it is good enough to deploy or not
     """
+    accuracy = deployment_trigger_prepare()
     return accuracy >= config.min_accuracy
+
 
 class MLFlowDeploymentLoaderStepParameters(BaseParameters):
     """
@@ -88,35 +83,34 @@ def prediction_service_loader(
         )
     return existing_services[0]
 
-@step
-def predictor(
-    service: MLFlowDeploymentService,
-    data: str
-) -> np.ndarray:
-    
-    service.start(timeout=10)
-    data = json.loads(data)
-    data.pop("columns")
-    data.pop("index")
-    columns_for_df = [
-        "sbp",
-        "tobacco",
-        "ldl",
-        "adiposity",
-        "typea",
-        "obesity",
-        "alcohol",
-        "age",
-        "famhist_Absent",
-        "famhist_Present"
-    ]
-    df = pd.DataFrame(data["data"], columns=columns_for_df)
-    df = df.fillna('')
-    json_list = json.loads(json.dumps(list(df.T.to_dict().values())))
-    data = np.array(json_list)
 
+@step(enable_cache=False)
+def predictor(service: MLFlowDeploymentService) -> np.ndarray:
+    """
+    Makes predictions on thr input data using a deployed ML model
+
+    Args:
+        service: An instance of the MLFlowDeploymentService that represents the deployed model service
+    Returns:
+        np.ndarray: A numy array containing the predictions made by the model
+    """
+    service.start(timeout=10)
+    data = predictor_prepare()
     prediction = service.predict(data)
     return prediction
+
+
+@step(enable_cache=False)
+def get_model() -> ClassifierMixin:
+    """
+    Import a trained model from the MongoDB
+    
+    Returns:
+        ClassifierMixin: Trained model
+    """
+    MongoOper = MongoOperations()
+    model = MongoOper.read_model_from_mongo("Trained_model")
+    return model
 
 
 @pipeline(enable_cache=False, settings={'docker': docker_settings})
@@ -126,12 +120,14 @@ def continuous_deployment_pipeline(
     workers: int = 1,
     timeout: int = DEFAULT_SERVICE_START_STOP_TIMEOUT
 ):
-    ingested_data = ingest_df(data_path)
-    X_train, X_test, y_train, y_test = clean_df(ingested_data)
-    classifier = train_model(X_train, X_test, y_train, y_test)
-    accuracy, recall, f1, roc_auc, conf_matrix = evaluate_model(classifier, X_test, y_test)
-    deployment_decision = deployment_trigger(accuracy)
-    mlflow_model_deployer_step(
+    ingest_df(data_path)
+    clean_df(after="ingest_df")
+    train_model(after="clean_df")
+    evaluate_model(after="train_model")
+    classifier = get_model()
+
+    deployment_decision = deployment_trigger()
+    mlflow_model_deployer_step(after="evaluate_model",
         model = classifier,
         deploy_decision = deployment_decision,
         workers = workers,
@@ -140,12 +136,11 @@ def continuous_deployment_pipeline(
 
 @pipeline(enable_cache=False, settings={"docker": docker_settings})
 def inference_pipeline(pipeline_name: str, pipeline_step_name: str):
-    data = dynamic_importer()
     service = prediction_service_loader(
         pipeline_name=pipeline_name,
         pipeline_step_name=pipeline_step_name,
         running=False
     )
-    prediction = predictor(service=service, data=data)
+    prediction = predictor(service=service)
     return prediction
     

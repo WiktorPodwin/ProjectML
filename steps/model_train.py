@@ -3,9 +3,10 @@ import mlflow
 import pandas as pd
 from zenml import step
 from zenml.client import Client
-from src.model_development import KNN, LogisticRegressionModel, RandomForestModel, HyperparameterChoice
+from src import KNN, LogisticRegressionModel, RandomForestModel, HyperparameterChoice
 from .config import ModelNameConfig
 from sklearn.base import ClassifierMixin
+from mongo_ops import MongoOperations
 
 client = Client()
 client.activate_stack("mlflow_stack_customer")
@@ -13,24 +14,20 @@ client.activate_stack("mlflow_stack_customer")
 experiment_tracker = client.active_stack.experiment_tracker
 
 @step(experiment_tracker=experiment_tracker.name, enable_cache=False)
-def train_model(
-    X_train: pd.DataFrame,
-    X_test: pd.DataFrame,
-    y_train: pd.Series,
-    y_test: pd.Series,
-    config: ModelNameConfig
-) -> ClassifierMixin:
+def train_model(config: ModelNameConfig) -> None:
     """
     Trains the model on the ingested data
     
     Args:
-        X_train: Traning data
-        X_test: Testing data
-        y_train: Training labels
-        y_test: Testing_labels
         config: Model name
     """
     try:
+        Mongo_Operations = MongoOperations()
+        X_train = Mongo_Operations.read_data_from_mongo("X_train")
+        y_train = Mongo_Operations.read_data_from_mongo("y_train")
+        X_test = Mongo_Operations.read_data_from_mongo("X_test")
+        y_test = Mongo_Operations.read_data_from_mongo("y_test")
+
         model = None
         if config.name_of_model == "KNeighborsClassifier":
             mlflow.sklearn.autolog()   
@@ -51,7 +48,8 @@ def train_model(
             trained_model = model.train(X_train, y_train, **best_parameters)
         else: 
             trained_model = model.train(X_train, y_train)
-        return trained_model
+
+        Mongo_Operations.save_model_to_mongo(model=trained_model, collection_name="Trained_model", model_name=config.name_of_model)
     
     except Exception as e:
         logging.error(f"Error in training model: {e}")
