@@ -8,10 +8,7 @@ from zenml.integrations.mlflow.model_deployers.mlflow_model_deployer import MLFl
 from zenml.integrations.mlflow.services import MLFlowDeploymentService
 from zenml.integrations.mlflow.steps import mlflow_model_deployer_step
 from zenml.steps import BaseParameters, Output
-from steps.clean_data import clean_df
-from steps.ingest_data import ingest_df
-from steps.model_train import train_model
-from steps.model_evaluate import evaluate_model
+from steps import ingest_df, clean_df, train_model, evaluate_model, data_transform
 from src import deployment_trigger_prepare, predictor_prepare
 from mongo_ops import MongoOperations
 from sklearn.base import ClassifierMixin
@@ -109,7 +106,7 @@ def get_model() -> ClassifierMixin:
         ClassifierMixin: Trained model
     """
     MongoOper = MongoOperations()
-    model = MongoOper.read_model_from_mongo("Trained_model")
+    model = MongoOper.read_algorithm_from_mongo("Trained_model")
     return model
 
 
@@ -122,12 +119,13 @@ def continuous_deployment_pipeline(
 ):
     ingest_df(data_path)
     clean_df(after="ingest_df")
-    train_model(after="clean_df")
+    data_transform(after="clean_df")
+    train_model(after="data_transform")
     evaluate_model(after="train_model")
-    classifier = get_model()
-
-    deployment_decision = deployment_trigger()
-    mlflow_model_deployer_step(after="evaluate_model",
+    classifier = get_model(after="train_model")
+    deployment_decision = deployment_trigger(after="evaluate_model")
+    
+    mlflow_model_deployer_step(after="deployment_trigger",
         model = classifier,
         deploy_decision = deployment_decision,
         workers = workers,

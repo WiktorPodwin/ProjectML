@@ -5,6 +5,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import optuna
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
 
 class Model(ABC):
     """
@@ -52,7 +54,6 @@ class LogisticRegressionModel(Model):
         try:
             classifier = LogisticRegression(**kwargs)
             classifier.fit(X_train, y_train)
-            logging.info("Model training completed.")
             return classifier
         except Exception as e:
             logging.error(f"Error in model training: {e}")
@@ -71,9 +72,9 @@ class LogisticRegressionModel(Model):
         Returns:
             float: accuracy score of the trained model on the test data
         """
-        C = trial.suggest_loguniform("C", 1e-4, 1e2)
+        C = trial.suggest_float("C", 1e-4, 1e2, log=True)
         solver = trial.suggest_categorical("solver", ("lbfgs", "saga"))
-        tol = trial.suggest_loguniform("tol", 1e-5, 1e-2)
+        tol = trial.suggest_float("tol", 1e-5, 1e-2, log=True)
         classifier = self.train(X_train, y_train, C=C, solver=solver, tol=tol)
         return classifier.score(X_test, y_test)
 
@@ -96,7 +97,6 @@ class KNN(Model):
         try:
             classifier = KNeighborsClassifier(**kwargs)
             classifier.fit(X_train, y_train)
-            logging.info("Model training completed.")
             return classifier
         except Exception as e:
             logging.error(f"Error in model training: {e}")
@@ -142,13 +142,12 @@ class RandomForestModel(Model):
         try:
             classifier = RandomForestClassifier(**args)
             classifier.fit(X_train, y_train)
-            logging.info("Model training completed.")
             return classifier
         except Exception as e:
             logging.error(f"Error in model training: {e}")
             raise e
         
-    def optimize(self, trial, X_train, y_train, X_test, y_test) -> float:
+    def optimize(self, trial, X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.DataFrame, y_test: pd.Series) -> float:
          """
         Optimize the best hyperparameters for the model
         
@@ -167,8 +166,88 @@ class RandomForestModel(Model):
          classifier = self.train(X_train, y_train, n_estimators=n_estimators, max_depth=max_depth, criterion=criterion)
          return classifier.score(X_test, y_test)
 
+class SVMModel(Model):
+    """
+    The SVM Classifier
+    """
+    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> SVC:
+        """
+        Trains the model
+        
+        Args:  
+            X_train: Training data
+            y_train: Training labels
+        Returns:
+            SCV: Trained classifier
+        """
+        try:
+            y_train = y_train.values.ravel()
+            classifier = SVC(**args)
+            classifier.fit(X_train, y_train)
+            logging.info("Model training comlpeted")
+            return classifier
+        except Exception as e:
+            logging.error(f"Error in model trtaining: {e}")
+            raise e
+    def optimize(self, trial, X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.DataFrame, y_test: pd.Series) -> float:
+        """
+        Optimize the best hyperparameters for the model
 
+        Args:
+            trial: Optuna trial object
+            X_train: Training data
+            y_train: Training labels
+            X_test: Test data
+            y_test: Test labels
+        Returns:
+            float: accuracy score of the trained model on the test data
+        """
+        C = trial.suggest_float("C", 5e-2, 10, log=True)
+        tol = trial.suggest_float("tol", 1e-5, 1e-1, log=True)
+        gamma = trial.suggest_categorical("gamma", ["scale", "auto"])
+        classifier = self.train(X_train, y_train, C=C, tol=tol, gamma=gamma)
+        return classifier.score(X_test, y_test)
+    
+class GaussianNBModel(Model):
+    """
+    The Gaussian Naive Bayes Classifier
+    """
+    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> GaussianNB:
+        """
+        Trains the model
+        
+        Args:  
+            X_train: Training data
+            y_train: Training labels
+        Returns:
+            GaussianNB: Trained classifier
+        """
+        try:
+            classifier = GaussianNB(**args)
+            classifier.fit(X_train, y_train)
+            logging.info("Model training completed")
+            return classifier
+        except Exception as e:
+            logging.error(f"Error inmodel training: {e}")
+            raise e
+    
+    def optimize(self, trial, X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.DataFrame, y_test: pd.Series) -> float:
+        """
+        Optimize the best hyperparameters for the model
 
+        Args:
+            trial: Optuna trial object
+            X_train: Training data
+            y_train: Training labels
+            X_test: Test data
+            y_test: Test labels
+        Returns:
+            float: accuracy score of the trained model on the test data
+        """
+        var_smoothing = trial.suggest_float("var_smoothing", 1e-12, 1e-8, log=True)
+        classifier = self.train(X_train, y_train, var_smoothing=var_smoothing)
+        return classifier.score(X_test, y_test)
+    
 class HyperparameterChoice:
     """
     Class for choosing best hyperparameters.

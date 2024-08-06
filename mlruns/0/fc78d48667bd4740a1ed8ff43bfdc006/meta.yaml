@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/0/fc78d48667bd4740a1ed8ff43bfdc006/artifacts
+end_time: 1722516344854
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: fc78d48667bd4740a1ed8ff43bfdc006
+run_name: masked-shark-588
+run_uuid: fc78d48667bd4740a1ed8ff43bfdc006
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1722516344840
+status: 4
+tags: []
+user_id: wiktor

@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/0/5b8b9bbc902d461897456caebfb8c70a/artifacts
+end_time: 1722588114615
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 5b8b9bbc902d461897456caebfb8c70a
+run_name: mercurial-slug-266
+run_uuid: 5b8b9bbc902d461897456caebfb8c70a
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1722588112047
+status: 4
+tags: []
+user_id: wiktor

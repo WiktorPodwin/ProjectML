@@ -6,13 +6,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 from typing import Union
 
+
 class DataStrategy(ABC):
     """
     Abstract class defining stratety for handling data
     """
 
     @abstractmethod
-    def handle_data(self, data: pd.DataFrame) -> Union[pd.DataFrame, pd.Series]:
+    def handle_data(self):
         pass
 
 class DataPreProcessStrategy(DataStrategy):
@@ -23,6 +24,11 @@ class DataPreProcessStrategy(DataStrategy):
     def handle_data(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Preprocess data
+
+        Args:
+            data: Dataset for preprocessing
+        Returns:
+            pd.DataFrame: Cleaned data
         """
         try:
             data.fillna(data['sbp'].median(), inplace=True)
@@ -52,6 +58,12 @@ class DataSplitStrategy(DataStrategy):
     def handle_data(self, data: pd.DataFrame) -> Union[pd.DataFrame, pd.Series]:
         """
         Devide data into train and test
+
+        Args:
+            data: Dataset for splitting
+
+        Returns:
+            Union[pd.DataFrame, pd.Series]: splited data into train and test dataset
         """
         try:
             X = data.drop(['chd'], axis=1)
@@ -61,22 +73,22 @@ class DataSplitStrategy(DataStrategy):
         except Exception as e:
             logging.error(f'Error while dividing data: {e}')
             raise e
-        
 
 class DataCleaning:
     """
     Class for cleaning the data and deviding into train and test
     """
-    def __init__(self, data: pd.DataFrame, strategy: DataStrategy):
-        self.data = data
+    def __init__(self, strategy: DataStrategy, data: pd.DataFrame):
         self.strategy = strategy
-    
-    def handle_data(self) -> Union[pd.DataFrame, pd.Series]:
+        self.data = data
+
+    def apply_strategy(self) -> Union[pd.DataFrame, pd.Series]:
         """
-        Handle data
+        Apply precess strategy on the data
         """
         try:
             return self.strategy.handle_data(self.data)
         except Exception as e:
-            logging.error(f'Error with handling data: {e}')
+            logging.error(f'Error while precessing data: {e}')
             raise e
+        

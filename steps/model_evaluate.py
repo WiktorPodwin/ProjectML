@@ -1,13 +1,8 @@
 import logging
 import mlflow
-import pandas as pd
 from zenml import step
 from zenml.client import Client
-from typing import Tuple
-from typing_extensions import Annotated
 from src import Accuracy, Recall, F1, RocAuc, ConfMatrix
-from sklearn.base import ClassifierMixin
-import numpy as np
 from mongo_ops import MongoOperations
 
 client = Client()
@@ -24,7 +19,7 @@ def evaluate_model() -> None:
         Mongo_Operations = MongoOperations()
         X_test = Mongo_Operations.read_data_from_mongo("X_test")
         y_test = Mongo_Operations.read_data_from_mongo("y_test")
-        model = Mongo_Operations.read_model_from_mongo("Trained_model")
+        model = Mongo_Operations.read_algorithm_from_mongo("Trained_model")
         prediction = model.predict(X_test)
 
         accuracy_class = Accuracy()

@@ -37,7 +37,6 @@ def main(config: str, min_accuracy: float):
     
     if deploy:
         continuous_deployment_pipeline(
-            # data_path = "C:/Users/wpodw/Desktop/Wiktor/Programowanie/Git/ProjectML/data/SAHeart.csv",
             min_accuracy = min_accuracy,
             workers = 3,
             timeout = 60)
@@ -55,7 +54,7 @@ def main(config: str, min_accuracy: float):
                 capture_output=True)
             
             logging.info(
-                f"\nZenML Dashboard started successfully\n."
+                f"\nZenML Dashboard started successfully.\n"
                 f"Command output:\n {zenml_result.stdout}")
 
         except Exception as e:
@@ -64,7 +63,7 @@ def main(config: str, min_accuracy: float):
         
     print(
         "You can run:\n"
-        f"[italic green]    mlflow ui --backend-store-ui '{get_tracking_uri()}'"
+        f"[italic green]    mlflow ui --backend-store-uri '{get_tracking_uri()}'"
         "[/italic green]\n ... to inspect your experiment runs within the MLFlow"
         "UI.\nYou can find your runs tracked within the "
         "'mlflow_example_pipeline' experiment. There you'll also be able to "
@@ -80,6 +79,7 @@ def main(config: str, min_accuracy: float):
 
     if existing_services:
         service = cast(MLFlowDeploymentService, existing_services[0])
+        
         if service.is_running:
             print(
                 f"The MLflow prediction server is running locally as a daemon "

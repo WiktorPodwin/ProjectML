@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/0/03fe050555914c1ea8f5effe72c666a5/artifacts
+end_time: 1722526167126
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 03fe050555914c1ea8f5effe72c666a5
+run_name: big-auk-488
+run_uuid: 03fe050555914c1ea8f5effe72c666a5
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1722526167118
+status: 3
+tags: []
+user_id: wiktor

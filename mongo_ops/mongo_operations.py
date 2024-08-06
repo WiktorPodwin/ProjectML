@@ -82,41 +82,39 @@ class MongoOperations:
             logging.error(f"Error while loading data from MongoDB: {e}")
             raise e
         
-    def save_model_to_mongo(self, model: ClassifierMixin, collection_name: str, model_name) -> None:
+    def save_algorithm_to_mongo(self, algorithm, collection_name: str, algorithm_name) -> None:
         """
-        Saving model into collection
+        Saving algorithm into collection
         
         Args:
-            model: Trained model
+            algorithm: Algorithm to save
             collection_name: MongoDB collection
-            model_name: Model name
+            algorithm_name: algorithm name
         """
         try:
-            pickled_model = pickle.dumps(model)
-            compressed_model = gzip.compress(pickled_model)
+            pickled_algorithm = pickle.dumps(algorithm)
+            compressed_algorithm = gzip.compress(pickled_algorithm)
             collection = self.database[collection_name]
-            collection.insert_one({"model": compressed_model, "name": model_name})
-            logging.info(f"Successfully added model into MongoDB collection: {collection_name}")
+            collection.insert_one({"algorithm": compressed_algorithm, "name": algorithm_name})
+            logging.info(f"Successfully added algorithm into MongoDB collection: {collection_name}")
         except Exception as e:
-            logging.error(f"Error while saving model into MongoDB: {e}")
+            logging.error(f"Error while saving algorithm into MongoDB: {e}")
             raise e
 
-    def read_model_from_mongo(self, collection_name: str) -> ClassifierMixin:
+    def read_algorithm_from_mongo(self, collection_name: str):
         """
-        Reading model from MongoDB
+        Reading algorithm from MongoDB
         
         Args:
             collection_name: MongoDB collection
-        Returns:
-            ClassifierMixin: Trained model
         """
         try:
             collection = self.database[collection_name]
             result = collection.find_one()
-            pickled_model = result.get("model")
-            return pickle.loads(gzip.decompress(pickled_model))
+            pickled_algorithm = result.get("algorithm")
+            return pickle.loads(gzip.decompress(pickled_algorithm))
         except Exception as e:
-            logging.error(f"Error while loading model from the collection: {collection_name}")
+            logging.error(f"Error while loading algorithm from the collection: {collection_name}")
             raise e
         
     def delete_old_data(self) -> None:
@@ -131,4 +129,18 @@ class MongoOperations:
                     collection.delete_many({})
         except Exception as e:
             logging.error(f"Error while deleting data from MongoDB: {e}")
+            raise e
+        
+    def clear_collection(self, collection_name: str) -> None:
+        """
+        Deletes all documents in collection
+
+        Args:
+            collection_name: MongoDB collection
+        """
+        try:
+            collection = self.database[collection_name]
+            collection.delete_many({})
+        except Exception as e:
+            logging.error(f"Error while deleting documents from collection: {collection_name}: {e}")
             raise e
