@@ -1,6 +1,5 @@
 import logging
-from mongo_ops import MongoOperations
-import numpy as np
+from docker_services import MongoOperations
 import pandas as pd
 from steps import DataTransformConfig
 
@@ -17,7 +16,6 @@ def deployment_trigger_prepare() -> float:
             collection_name="Evaluation", 
             column_name="Accuracy"
             )
-        print("accuracy: ", accuracy_df)
         accuracy = float(accuracy_df.iloc[0, 0])
         return accuracy
     except Exception as e:

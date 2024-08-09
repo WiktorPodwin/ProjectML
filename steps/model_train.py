@@ -1,17 +1,14 @@
 import logging
 import mlflow
-import pandas as pd
 from zenml import step
 from zenml.client import Client
-from src import KNN, LogisticRegressionModel, RandomForestModel, SVMModel, GaussianNBModel, HyperparameterChoice
+from src import KNN, LogisticRegressionModel, RandomForestModel, SVMModel, GaussianNBModel, BaggingModel, HyperparameterChoice
 from .config import ModelNameConfig
-from sklearn.base import ClassifierMixin
-from mongo_ops import MongoOperations
+from docker_services import MongoOperations
 
 client = Client()
 client.activate_stack("mlflow_stack_customer")
 experiment_tracker = client.active_stack.experiment_tracker
-logging.getLogger("mlflow").setLevel(logging.DEBUG)
 
 @step(experiment_tracker=experiment_tracker.name, enable_cache=False)
 def train_model(config: ModelNameConfig) -> None:
@@ -44,6 +41,10 @@ def train_model(config: ModelNameConfig) -> None:
         elif config.name_of_model == "GaussianNB":
             model = GaussianNBModel()
             mlflow.sklearn.log_model(model, "model")
+        elif config.name_of_model == "BaggingClassifier":
+            mlflow.autolog()
+            model = BaggingModel()
+            mlflow.sklearn.log_model(model, "model")
         else:
             raise ValueError(f'Model not supported: {config.name_of_model}')
                 
@@ -59,5 +60,5 @@ def train_model(config: ModelNameConfig) -> None:
         Mongo_Operations.save_algorithm_to_mongo(algorithm=trained_model, collection_name="Trained_model", algorithm_name=config.name_of_model)
     
     except Exception as e:
-        logging.error(f"Error in training model: {e}")
+        logging.error(f"Error in model training: {e}")
         raise e

@@ -5,6 +5,7 @@ import logging
 import pandas as pd
 from abc import abstractmethod, ABC
 from typing import Tuple, Any
+from pyspark.sql import DataFrame as SparkDataFrame
 
 class DataStrategy(ABC):
     """
@@ -19,7 +20,7 @@ class DataStandardScaler(DataStrategy):
     """
     Class for standardizing training and test dataset using 'StandardScaler'
     """     
-    def handle_data(self, X_train: pd.DataFrame, X_test: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, StandardScaler]:
+    def handle_data(self, X_train: SparkDataFrame, X_test: SparkDataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, StandardScaler]:
         """
         Standardize data
         
@@ -33,6 +34,8 @@ class DataStandardScaler(DataStrategy):
                 - The "StandardScaler" used for the transformation
         """
         try:
+            X_train = X_train.toPandas()
+            X_test = X_test.toPandas()
             scaler = StandardScaler()
             scaler.fit(X_train)
             X_train_scaled = scaler.transform(X_train)

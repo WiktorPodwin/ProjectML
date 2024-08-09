@@ -1,8 +1,7 @@
 import logging
-import pandas as pd
 from zenml import step
 from src import DataCleaning, DataPreProcessStrategy, DataSplitStrategy, DataStandardScaler, DataTransforming
-from mongo_ops import MongoOperations
+from docker_services import MongoOperations, ProjectSparkSession
 import mlflow
 from zenml.client import Client
 
@@ -16,15 +15,16 @@ def clean_df() -> None:
     Cleans the data and divides it into train and test, and standardize the data
     """
     try:
+        spark_session = ProjectSparkSession.initialize_spark_session()
         Mongo_Operations = MongoOperations()
         df = Mongo_Operations.read_data_from_mongo("Raw_data")
 
         data_preprocessing = DataPreProcessStrategy()
-        data_preprocess = DataCleaning(data_preprocessing, df)
+        data_preprocess = DataCleaning(data_preprocessing, df, spark_session)
         data_preprocessed = data_preprocess.apply_strategy()
 
         data_splitting = DataSplitStrategy()
-        data_split = DataCleaning(data_splitting, data_preprocessed)
+        data_split = DataCleaning(data_splitting, data_preprocessed, spark_session)
         X_train, X_test, y_train, y_test = data_split.apply_strategy()
 
         data_standardizing = DataStandardScaler()
@@ -39,7 +39,8 @@ def clean_df() -> None:
         Mongo_Operations.save_data_to_mongo(y_test, "y_test")
         Mongo_Operations.save_algorithm_to_mongo(algorithm=standard_scaler, collection_name="standard_scaler", algorithm_name="Standard Scaler")
         logging.info('Cleaning data completed.')
-
     except Exception as e:
         logging.error(f'Error while cleaning data: {e}')
         raise e
+    finally:
+        ProjectSparkSession.stop_spark_session(spark_session)

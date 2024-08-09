@@ -4,8 +4,8 @@ class ModelNameConfig(BaseParameters):
     """
     Model configuration
     """
-    # RandomForestClassifier, LogisticRegression, KNeighborsClassifier, SVM, GaussianNB
-    name_of_model: str = "GaussianNB"
+    # RandomForestClassifier, LogisticRegression, KNeighborsClassifier, SVM, GaussianNB, BaggingClassifier
+    name_of_model: str = "LogisticRegression"
     fine_tuning: bool = False
 
 class DataTransformConfig(BaseParameters):

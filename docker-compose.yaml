@@ -1,12 +1,52 @@
 version: '3.8'
 
 services:
-  my_service:
+  mongo:
+    build: 
+      context: .
+      dockerfile: Dockerfile.mongo
+    container_name: mongo-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - services-network
+  
+  spark-master:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.spark
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_MASTER_HOST=spark-master
     ports:
-      - "8237:8237"
-    volumes:
-      - .:/usr/src/app
-    command: ["python", "run_deployment.py", "--config", "deploy_and_predict"]
+      - "8080:8080"
+      - "7077:7077"
+    networks:
+      - services-network
+    depends_on:
+      - mongo
+
+  spark-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
+    container_name: spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    ports:
+      - "8081:8081"
+    networks:
+      - services-network
+    depends_on:
+      - spark-master
+
+networks:
+  services-network:
+    driver: bridge
+
+volumes:
+  mongo-data:

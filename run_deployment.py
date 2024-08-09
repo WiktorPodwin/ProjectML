@@ -78,8 +78,10 @@ def main(config: str, min_accuracy: float):
     )
 
     if existing_services:
+        service.timeout(60)
         service = cast(MLFlowDeploymentService, existing_services[0])
-        
+        service.start()
+
         if service.is_running:
             print(
                 f"The MLflow prediction server is running locally as a daemon "

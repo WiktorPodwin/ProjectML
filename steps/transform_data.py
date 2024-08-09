@@ -1,6 +1,6 @@
 from zenml import step
 from src import PCAModel, LDAModel, DataTransforming
-from mongo_ops import MongoOperations
+from docker_services import MongoOperations
 import logging
 from .config import DataTransformConfig
 import mlflow

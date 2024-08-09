@@ -3,8 +3,11 @@ import pandas as pd
 from abc import ABC, abstractmethod
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
-from typing import Union
+from pyspark.ml.feature import StringIndexer
+from pyspark.sql.types import NumericType
+from pyspark.sql import SparkSession
+from pyspark.sql import DataFrame as SparkDataFrame
+from typing import Union, NamedTuple
 
 
 class DataStrategy(ABC):
@@ -21,55 +24,72 @@ class DataPreProcessStrategy(DataStrategy):
     Strategy for processing data
     """
 
-    def handle_data(self, data: pd.DataFrame) -> pd.DataFrame:
+    def handle_data(self, data: pd.DataFrame, spark_session: SparkSession) -> SparkDataFrame:
         """
         Preprocess data
 
         Args:
             data: Dataset for preprocessing
+            spark_session: Spark connection
         Returns:
-            pd.DataFrame: Cleaned data
+            SparkDataFrame: Cleaned data
         """
         try:
-            data.fillna(data['sbp'].median(), inplace=True)
-            data.fillna(data['tobacco'].median(), inplace=True)
-            data.fillna(data['ldl'].median(), inplace=True)
-            data.fillna(data['adiposity'].median(), inplace=True)
-            data.dropna(subset=['famhist'])
-            data.fillna(data['typea'].median(), inplace=True)
-            data.fillna(data['obesity'].median(), inplace=True)
-            data.fillna(data['alcohol'].median(), inplace=True)
-            data.fillna(data['age'].median(), inplace=True)
-            data.dropna(subset=['chd'])
-
-            encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False).set_output(transform='pandas')
-            famhist_encoded = encoder.fit_transform(data[['famhist']])
-            data = pd.concat([data, famhist_encoded], axis=1).drop(columns=['famhist', 'row.names'])
-            data = data.select_dtypes(include=[np.number])
-            return data
+            spark_data = spark_session.createDataFrame(data)
+            spark_data.drop("row_names")
+            spark_data = spark_data.dropna()
+            indexer = StringIndexer(inputCol="famhist", outputCol="famhist_index")
+            data_indexed = indexer.fit(spark_data).transform(spark_data)
+            data_prepared = data_indexed.drop("famhist")
+            numeric_col = [field.name for field in data_prepared.schema.fields if isinstance(field.dataType, NumericType)]
+            data_numeric = data_prepared.select(numeric_col)
+            return data_numeric
         except Exception as e:
             logging.error(f'Error in processing data: {e}')
             raise e
         
+class SplitData(NamedTuple):
+    """
+    A named tuple to hold the results of a data split operation.
+
+    Attributes:
+        X_train: The training features as a Spark DataFrame.
+        X_test: The testing features as a Spark DataFrame.
+        y_train: The training labels as a Spark DataFrame.
+        y_test: The testing labels as a Spark DataFrame.
+    """
+    X_train: SparkDataFrame
+    X_test: SparkDataFrame
+    y_train: SparkDataFrame
+    y_test: SparkDataFrame
+
 class DataSplitStrategy(DataStrategy):
     """
     Strategy for dividing data into train and test.
     """
-    def handle_data(self, data: pd.DataFrame) -> Union[pd.DataFrame, pd.Series]:
+    def handle_data(self, data: SparkDataFrame, spark_session: SparkSession) -> SplitData:
         """
         Devide data into train and test
 
         Args:
-            data: Dataset for splitting
+            data: The input Spark DataFrame containing the dataset
+            spark_session: Spark connection
 
         Returns:
-            Union[pd.DataFrame, pd.Series]: splited data into train and test dataset
+            SplitData: a named tuple containing the following Spark Dataframes:
+                - X_train: The training features as a Spark DataFrame.
+                - X_test: The testing features as a Spark DataFrame.
+                - y_train: The training labels as a Spark DataFrame.
+                - y_test: The testing labels as a Spark DataFrame.
         """
         try:
-            X = data.drop(['chd'], axis=1)
-            y = data['chd']
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-            return X_train, X_test, y_train, y_test
+            
+            train_data, test_data = data.randomSplit([0.8, 0.2], seed=42)
+            X_train = train_data.drop("chd")
+            X_test = test_data.drop("chd")
+            y_train = train_data.select("chd")
+            y_test = test_data.select("chd")
+            return SplitData(X_train, X_test, y_train, y_test)
         except Exception as e:
             logging.error(f'Error while dividing data: {e}')
             raise e
@@ -78,16 +98,17 @@ class DataCleaning:
     """
     Class for cleaning the data and deviding into train and test
     """
-    def __init__(self, strategy: DataStrategy, data: pd.DataFrame):
+    def __init__(self, strategy: DataStrategy, data: pd.DataFrame, spark_session: SparkSession = None):
         self.strategy = strategy
         self.data = data
+        self.spark_session = spark_session
 
-    def apply_strategy(self) -> Union[pd.DataFrame, pd.Series]:
+    def apply_strategy(self) -> SparkDataFrame:
         """
         Apply precess strategy on the data
         """
         try:
-            return self.strategy.handle_data(self.data)
+            return self.strategy.handle_data(self.data, self.spark_session)
         except Exception as e:
             logging.error(f'Error while precessing data: {e}')
             raise e

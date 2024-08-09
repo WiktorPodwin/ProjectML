@@ -2,9 +2,10 @@ from pymongo import MongoClient
 import logging
 import pandas as pd
 import pickle
-from sklearn.base import ClassifierMixin
 from typing import Union
 import gzip
+from pyspark.sql import DataFrame as SparkDataFrame
+
 
 class MongoOperations:
     """
@@ -29,18 +30,18 @@ class MongoOperations:
         if hasattr(self, 'client'):
             self.client.close()
 
-    def save_data_to_mongo(self, data: Union[pd.Series, pd.DataFrame, dict], collection_name: str) -> None:            
+    def save_data_to_mongo(self, data: Union[pd.Series, pd.DataFrame, SparkDataFrame, dict], collection_name: str) -> None:            
         """
         Saving data into collection
 
         Args:
-            df: ingested data
+            data: ingested data
             collection_name: name of the collection 
-        Returns:
-            None 
         """
         try:
             collection = self.database[collection_name]
+            if isinstance(data, SparkDataFrame):
+                data = data.toPandas()
             if isinstance(data, pd.DataFrame):
                 final_data = data.to_dict(orient="records")
                 collection.insert_many(final_data)
@@ -52,7 +53,11 @@ class MongoOperations:
                 collection.insert_many(final_data)
             elif isinstance(data, dict):
                 collection.insert_one(data)
-            logging.info("Successfully added data into MongoDB collection.")
+            else:
+                raise TypeError("Wrong type of input data, the possible types "
+                                "of data: (pd.Series, pd.DataFrame, DataFrame, dict).")
+            
+            logging.info(f"Successfully added data into MongoDB collection: {collection_name}")
         except Exception as e:
             logging.error(f"Error while saving data into MongoDB: {e}")
             raise e
@@ -66,7 +71,7 @@ class MongoOperations:
             collection_name: MongoDB collection
             column_name: Column to filter from colelction
         Returns:
-            df: Data in Data Frame
+             Union[pd.DataFrame, pd.Series]: Loaded data as pd.DataFrame or pd.Series
         """
         try:
             collection = self.database[collection_name]
@@ -82,7 +87,7 @@ class MongoOperations:
             logging.error(f"Error while loading data from MongoDB: {e}")
             raise e
         
-    def save_algorithm_to_mongo(self, algorithm, collection_name: str, algorithm_name) -> None:
+    def save_algorithm_to_mongo(self, algorithm, collection_name: str, algorithm_name: str) -> None:
         """
         Saving algorithm into collection
         
@@ -119,7 +124,7 @@ class MongoOperations:
         
     def delete_old_data(self) -> None:
         """
-        Delete old data from all collections in MongoDB
+        Deletes old data from all collections in MongoDB
         """
         try:
             collections_list = self.database.list_collection_names()

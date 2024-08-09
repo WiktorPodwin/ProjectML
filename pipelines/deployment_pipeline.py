@@ -10,8 +10,9 @@ from zenml.integrations.mlflow.steps import mlflow_model_deployer_step
 from zenml.steps import BaseParameters, Output
 from steps import ingest_df, clean_df, train_model, evaluate_model, data_transform
 from src import deployment_trigger_prepare, predictor_prepare
-from mongo_ops import MongoOperations
+from docker_services import MongoOperations
 from sklearn.base import ClassifierMixin
+import logging 
 
 docker_settings = DockerSettings(required_integrations=[MLFLOW])
 
@@ -124,6 +125,7 @@ def continuous_deployment_pipeline(
     evaluate_model(after="train_model")
     classifier = get_model(after="train_model")
     deployment_decision = deployment_trigger(after="evaluate_model")
+    logging.info("Classifier: ", classifier)
     
     mlflow_model_deployer_step(after="deployment_trigger",
         model = classifier,

@@ -3,7 +3,7 @@ import mlflow
 from zenml import step
 from zenml.client import Client
 from src import Accuracy, Recall, F1, RocAuc, ConfMatrix
-from mongo_ops import MongoOperations
+from docker_services import MongoOperations
 
 client = Client()
 client.activate_stack("mlflow_stack_customer")
@@ -55,5 +55,5 @@ def evaluate_model() -> None:
         Mongo_Operations.save_data_to_mongo(data=data, collection_name='Evaluation')
         
     except Exception as e:
-        logging.error(f"Error while evaluating model: {e}")
+        logging.error(f"Error while model evaluating: {e}")
         raise e

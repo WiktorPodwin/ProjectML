@@ -2,11 +2,13 @@ import logging
 from abc import ABC, abstractmethod
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, BaggingClassifier
 import pandas as pd
 import optuna
 from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
+from sklearn.base import ClassifierMixin
+from sklearn.model_selection import cross_val_score
 
 class Model(ABC):
     """
@@ -248,6 +250,48 @@ class GaussianNBModel(Model):
         classifier = self.train(X_train, y_train, var_smoothing=var_smoothing)
         return classifier.score(X_test, y_test)
     
+class BaggingModel(Model):
+    """
+    The Bagging Classifier
+    """
+    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> ClassifierMixin:
+        """
+        Trains the model
+        """
+        try:
+            classifier = BaggingClassifier(**args)
+            classifier.fit(X_train, y_train)
+            logging.info("Model training completed")
+            return classifier
+        except Exception as e:
+            logging.error(f"Error in model training: {e}")
+            raise e
+    
+    def optimize(self, trial, X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.DataFrame, y_test: pd.Series) -> float:
+        """
+        Optimize the best hyperparameters for the model
+
+        Args:
+            trial: Optuna trial object
+            X_train: Training data
+            y_train: Training labels
+            X_test: Test data
+            y_test: Test labels
+        Returns:
+            float: accuracy score of the trained model on the test data
+        """
+        try:
+            n_estimators = trial.suggest_int("n_estimators", 10, 100)
+            oob_score = trial.suggest_categorical("oob_score", [True, False])
+            max_samples = trial.suggest_float("max_samples", 0.2, 1.0)
+            max_features = trial.suggest_float("max_features", 0.2, 1.0)
+            classifier = self.train(X_train, y_train, n_estimators=n_estimators, oob_score=oob_score, max_samples=max_samples, max_features=max_features)
+            scores = cross_val_score(classifier, X_train, y_train, cv=5, scoring="accuracy")
+            return scores.mean()
+        except Exception as e:
+            logging.error(f"Error while tuning BaggingClassifier: {e}")
+            raise e
+
 class HyperparameterChoice:
     """
     Class for choosing best hyperparameters.
