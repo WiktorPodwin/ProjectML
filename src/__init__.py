@@ -4,3 +4,4 @@ from .data_cleaning import DataPreProcessStrategy, DataSplitStrategy, DataCleani
 from .model_development import KNN, LogisticRegressionModel, RandomForestModel, SVMModel, GaussianNBModel, BaggingModel, HyperparameterChoice
 from .evaluation import Accuracy, F1, ConfMatrix, Recall, RocAuc
 from .data_transforming import DataStandardScaler, PCAModel, LDAModel, DataTransforming
+from .feature_importances import create_plot

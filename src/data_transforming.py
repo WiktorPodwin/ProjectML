@@ -101,7 +101,9 @@ class LDAModel(DataStrategy):
                 - The "LDA" used for the transformation
         """
         try:
-            number_dimensions = min(n_components, len(X_train.iloc[0, :]), (y_train["value"].nunique() - 1))
+            number_dimensions = min(n_components, len(X_train.iloc[0, :]), (y_train["chd"].nunique() - 1))
+            if number_dimensions == 0:
+                number_dimensions = 1
             lda = LinearDiscriminantAnalysis(n_components=number_dimensions)
             lda.fit(X_train, y_train)
             X_train_lda = lda.transform(X_train)

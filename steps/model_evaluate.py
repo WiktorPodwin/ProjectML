@@ -16,10 +16,10 @@ def evaluate_model() -> None:
     Evaluates the model on the ingested data
     """
     try:
-        Mongo_Operations = MongoOperations()
-        X_test = Mongo_Operations.read_data_from_mongo("X_test")
-        y_test = Mongo_Operations.read_data_from_mongo("y_test")
-        model = Mongo_Operations.read_algorithm_from_mongo("Trained_model")
+        mongo_oper = MongoOperations()
+        X_test = mongo_oper.read_data_from_mongo("X_test")
+        y_test = mongo_oper.read_data_from_mongo("y_test")
+        model = mongo_oper.read_algorithm_from_mongo("Trained_model")
         prediction = model.predict(X_test)
 
         accuracy_class = Accuracy()
@@ -52,7 +52,7 @@ def evaluate_model() -> None:
                 "F1 Score": f1_val,
                 "Roc-auc": roc_auc_val,
                 "Confusion matrix": str(conf_matrix_val)}
-        Mongo_Operations.save_data_to_mongo(data=data, collection_name='Evaluation')
+        mongo_oper.save_data_to_mongo(data=data, collection_name='Evaluation')
         
     except Exception as e:
         logging.error(f"Error while model evaluating: {e}")

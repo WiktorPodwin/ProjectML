@@ -23,7 +23,6 @@ def data_transform(config: DataTransformConfig) -> None:
             X_test = mongo_oper.read_data_from_mongo("X_test")
 
             if config.name_of_transformation == "PCA":
-                mlflow.sklearn.autolog()
                 pca = PCAModel()
                 pca_transforming = DataTransforming(strategy=pca, X_train=X_train, X_test=X_test, additional_parameter=config.number_dimensions)
                 X_train, X_test, algorithm = pca_transforming.pca_process()

@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from zenml import pipeline, step
 from zenml.config import DockerSettings
 from zenml.constants import DEFAULT_SERVICE_START_STOP_TIMEOUT
@@ -7,12 +6,11 @@ from zenml.integrations.constants import MLFLOW
 from zenml.integrations.mlflow.model_deployers.mlflow_model_deployer import MLFlowModelDeployer
 from zenml.integrations.mlflow.services import MLFlowDeploymentService
 from zenml.integrations.mlflow.steps import mlflow_model_deployer_step
-from zenml.steps import BaseParameters, Output
+from zenml.steps import BaseParameters
 from steps import ingest_df, clean_df, train_model, evaluate_model, data_transform
 from src import deployment_trigger_prepare, predictor_prepare
 from docker_services import MongoOperations
 from sklearn.base import ClassifierMixin
-import logging 
 
 docker_settings = DockerSettings(required_integrations=[MLFLOW])
 
@@ -90,7 +88,7 @@ def predictor(service: MLFlowDeploymentService) -> np.ndarray:
     Args:
         service: An instance of the MLFlowDeploymentService that represents the deployed model service
     Returns:
-        np.ndarray: A numy array containing the predictions made by the model
+        np.ndarray: A numpy array containing the predictions made by the model
     """
     service.start(timeout=10)
     data = predictor_prepare()
@@ -106,15 +104,15 @@ def get_model() -> ClassifierMixin:
     Returns:
         ClassifierMixin: Trained model
     """
-    MongoOper = MongoOperations()
-    model = MongoOper.read_algorithm_from_mongo("Trained_model")
+    mongo_oper = MongoOperations()
+    model = mongo_oper.read_algorithm_from_mongo("Trained_model")
     return model
 
 
 @pipeline(enable_cache=False, settings={'docker': docker_settings})
 def continuous_deployment_pipeline(
     data_path: str = "data/SAHeart.csv",
-    min_accuracy: float = 0.6,
+    min_accuracy: float = 0.7,
     workers: int = 1,
     timeout: int = DEFAULT_SERVICE_START_STOP_TIMEOUT
 ):
@@ -125,7 +123,6 @@ def continuous_deployment_pipeline(
     evaluate_model(after="train_model")
     classifier = get_model(after="train_model")
     deployment_decision = deployment_trigger(after="evaluate_model")
-    logging.info("Classifier: ", classifier)
     
     mlflow_model_deployer_step(after="deployment_trigger",
         model = classifier,

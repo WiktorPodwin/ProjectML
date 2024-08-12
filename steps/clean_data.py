@@ -16,8 +16,8 @@ def clean_df() -> None:
     """
     try:
         spark_session = ProjectSparkSession.initialize_spark_session()
-        Mongo_Operations = MongoOperations()
-        df = Mongo_Operations.read_data_from_mongo("Raw_data")
+        mongo_oper = MongoOperations()
+        df = mongo_oper.read_data_from_mongo("Raw_data")
 
         data_preprocessing = DataPreProcessStrategy()
         data_preprocess = DataCleaning(data_preprocessing, df, spark_session)
@@ -32,12 +32,12 @@ def clean_df() -> None:
         X_train, X_test, standard_scaler = data_standard.standardize()
         mlflow.sklearn.log_model(standard_scaler, "Standard_Scaler")
 
-        Mongo_Operations.save_data_to_mongo(data_preprocessed, "Cleaned_data")
-        Mongo_Operations.save_data_to_mongo(X_train, "X_train")
-        Mongo_Operations.save_data_to_mongo(y_train, "y_train")
-        Mongo_Operations.save_data_to_mongo(X_test, "X_test")
-        Mongo_Operations.save_data_to_mongo(y_test, "y_test")
-        Mongo_Operations.save_algorithm_to_mongo(algorithm=standard_scaler, collection_name="standard_scaler", algorithm_name="Standard Scaler")
+        mongo_oper.save_data_to_mongo(data_preprocessed, "Cleaned_data")
+        mongo_oper.save_data_to_mongo(X_train, "X_train")
+        mongo_oper.save_data_to_mongo(y_train, "y_train")
+        mongo_oper.save_data_to_mongo(X_test, "X_test")
+        mongo_oper.save_data_to_mongo(y_test, "y_test")
+        mongo_oper.save_algorithm_to_mongo(algorithm=standard_scaler, collection_name="standard_scaler", algorithm_name="Standard Scaler")
         logging.info('Cleaning data completed.')
     except Exception as e:
         logging.error(f'Error while cleaning data: {e}')

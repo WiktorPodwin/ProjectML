@@ -43,7 +43,7 @@ class LogisticRegressionModel(Model):
     """
     Logistic Regression Model
     """
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs) -> LogisticRegression:
+    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs) -> ClassifierMixin:
         """
         Trains the model
         
@@ -51,7 +51,7 @@ class LogisticRegressionModel(Model):
             X_train: Training data
             y_train: Training labels
         Returns:
-            LogisticRegression: The trained classifier
+            ClassifierMixin: The trained classifier
         """
         try:
             classifier = LogisticRegression(**kwargs)
@@ -86,7 +86,7 @@ class KNN(Model):
     K-Nearest Neighbors model
     """
 
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs) -> KNeighborsClassifier:
+    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs) -> ClassifierMixin:
         """
         Trains the model
         
@@ -94,7 +94,7 @@ class KNN(Model):
             X_train: Training data
             y_train: Training labels
         Returns:
-            KNeighborsClassifier: The trained classifier
+            ClassifierMixin: The trained classifier
         """
         try:
             classifier = KNeighborsClassifier(**kwargs)
@@ -131,7 +131,7 @@ class RandomForestModel(Model):
     """
     The Random Forest Claassifier
     """
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> RandomForestClassifier:
+    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> ClassifierMixin:
         """
         Trains the model
         
@@ -139,7 +139,7 @@ class RandomForestModel(Model):
             X_train: Training data
             y_train: Training labels
         Returns:
-            RandomForestClassifier: Trained classifier
+            ClassifierMixin: Trained classifier
         """
         try:
             classifier = RandomForestClassifier(**args)
@@ -172,7 +172,7 @@ class SVMModel(Model):
     """
     The SVM Classifier
     """
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> SVC:
+    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> ClassifierMixin:
         """
         Trains the model
         
@@ -180,7 +180,7 @@ class SVMModel(Model):
             X_train: Training data
             y_train: Training labels
         Returns:
-            SCV: Trained classifier
+            ClassifierMixin: Trained classifier
         """
         try:
             y_train = y_train.values.ravel()
@@ -214,7 +214,7 @@ class GaussianNBModel(Model):
     """
     The Gaussian Naive Bayes Classifier
     """
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> GaussianNB:
+    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> ClassifierMixin:
         """
         Trains the model
         
@@ -222,7 +222,7 @@ class GaussianNBModel(Model):
             X_train: Training data
             y_train: Training labels
         Returns:
-            GaussianNB: Trained classifier
+            ClassifierMixin: Trained classifier
         """
         try:
             classifier = GaussianNB(**args)
@@ -257,6 +257,12 @@ class BaggingModel(Model):
     def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> ClassifierMixin:
         """
         Trains the model
+
+        Args:  
+            X_train: Training data
+            y_train: Training labels
+        Returns:
+            ClassifierMixin: Trained classifier
         """
         try:
             classifier = BaggingClassifier(**args)

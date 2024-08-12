@@ -1,5 +1,4 @@
 import logging
-from docker_services import ProjectSparkSession
 from pyspark.sql import DataFrame as SparkDataFrame
 from pyspark.sql import SparkSession
 

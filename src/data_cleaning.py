@@ -1,13 +1,11 @@
 import logging 
 import pandas as pd
 from abc import ABC, abstractmethod
-import numpy as np
-from sklearn.model_selection import train_test_split
 from pyspark.ml.feature import StringIndexer
 from pyspark.sql.types import NumericType
 from pyspark.sql import SparkSession
 from pyspark.sql import DataFrame as SparkDataFrame
-from typing import Union, NamedTuple
+from typing import NamedTuple
 
 
 class DataStrategy(ABC):
@@ -36,7 +34,7 @@ class DataPreProcessStrategy(DataStrategy):
         """
         try:
             spark_data = spark_session.createDataFrame(data)
-            spark_data.drop("row_names")
+            spark_data = spark_data.drop("row_names")
             spark_data = spark_data.dropna()
             indexer = StringIndexer(inputCol="famhist", outputCol="famhist_index")
             data_indexed = indexer.fit(spark_data).transform(spark_data)

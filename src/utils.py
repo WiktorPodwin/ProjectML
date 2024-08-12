@@ -11,8 +11,8 @@ def deployment_trigger_prepare() -> float:
         float: value of the model accuracy
     """
     try:
-        MongoOper = MongoOperations()
-        accuracy_df = MongoOper.read_data_from_mongo(
+        mongo_oper = MongoOperations()
+        accuracy_df = mongo_oper.read_data_from_mongo(
             collection_name="Evaluation", 
             column_name="Accuracy"
             )
@@ -30,15 +30,15 @@ def predictor_prepare() -> pd.DataFrame:
         pd.DataFrame: Prepared data
     """
     try:
-        MongoOper = MongoOperations()
-        data = MongoOper.read_data_from_mongo(collection_name="Cleaned_data")
-        standard_scaler = MongoOper.read_algorithm_from_mongo("standard_scaler")
+        mongo_oper = MongoOperations()
+        data = mongo_oper.read_data_from_mongo(collection_name="Cleaned_data")
+        standard_scaler = mongo_oper.read_algorithm_from_mongo("standard_scaler")
         X_data = data.drop(columns=["chd"])
         y_data = data['chd']
         X_data = pd.DataFrame(standard_scaler.transform(X_data), columns=X_data.columns)
         config = DataTransformConfig()
         if config.fine_transforming == True:
-            transform_algorithm = MongoOper.read_algorithm_from_mongo("transformation_algorithm")
+            transform_algorithm = mongo_oper.read_algorithm_from_mongo("transformation_algorithm")
             X_data_transformed = transform_algorithm.transform(X_data)
             X_data = pd.DataFrame(X_data_transformed, columns=[f"column{x}" for x in range(len(X_data_transformed[0]))])
         data = pd.concat([X_data, y_data], axis=1)
