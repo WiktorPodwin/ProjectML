@@ -6,7 +6,6 @@ import mlflow
 from zenml.client import Client
 
 client = Client()
-client.activate_stack("mlflow_stack_customer")
 experiment_tracker = client.active_stack.experiment_tracker
 
 @step(experiment_tracker=experiment_tracker.name, enable_cache=False)
@@ -17,7 +16,7 @@ def clean_df() -> None:
     try:
         spark_session = ProjectSparkSession.initialize_spark_session()
         mongo_oper = MongoOperations()
-        df = mongo_oper.read_data_from_mongo("Raw_data")
+        df = mongo_oper.read_data_from_mongo("raw_data")
 
         data_preprocessing = DataPreProcessStrategy()
         data_preprocess = DataCleaning(data_preprocessing, df, spark_session)
@@ -32,7 +31,7 @@ def clean_df() -> None:
         X_train, X_test, standard_scaler = data_standard.standardize()
         mlflow.sklearn.log_model(standard_scaler, "Standard_Scaler")
 
-        mongo_oper.save_data_to_mongo(data_preprocessed, "Cleaned_data")
+        mongo_oper.save_data_to_mongo(data_preprocessed, "cleaned_data")
         mongo_oper.save_data_to_mongo(X_train, "X_train")
         mongo_oper.save_data_to_mongo(y_train, "y_train")
         mongo_oper.save_data_to_mongo(X_test, "X_test")

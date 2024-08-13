@@ -11,7 +11,7 @@ class MongoOperations:
     """
     Class to handle data in MongoDB
     """
-    def __init__(self, host: str = "localhost", port: int = 27017, database: str = "Classifier"):
+    def __init__(self, host: str = "localhost", port: int = 27017, database: str = "classifier"):
         """
         Initialize the MongoOperation class with a MongoDB connection
         

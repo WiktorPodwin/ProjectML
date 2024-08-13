@@ -17,7 +17,7 @@ def ingest_df(data_path: str):
         df = ingest_data.get_data()
         mongo_oper = MongoOperations()
         mongo_oper.delete_old_data()
-        mongo_oper.save_data_to_mongo(data=df, collection_name="Raw_data")
+        mongo_oper.save_data_to_mongo(data=df, collection_name="raw_data")
     except Exception as e:
         logging.error(f"Error while ingesting data: {e}", exc_info=True)
         raise e

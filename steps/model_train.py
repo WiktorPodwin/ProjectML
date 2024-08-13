@@ -7,7 +7,6 @@ from .config import ModelNameConfig
 from docker_services import MongoOperations
 
 client = Client()
-client.activate_stack("mlflow_stack_customer")
 experiment_tracker = client.active_stack.experiment_tracker
 
 @step(experiment_tracker=experiment_tracker.name, enable_cache=False)
@@ -49,12 +48,12 @@ def train_model(config: ModelNameConfig) -> None:
             mlflow.sklearn.autolog()
             trained_model = model.train(X_train, y_train, **best_parameters)
         else: 
-            trained_model = model.train(X_train, y_train)
             mlflow.sklearn.autolog()
+            trained_model = model.train(X_train, y_train)
 
         create_plot(model=trained_model, X_train=X_train, model_name=config.name_of_model)
 
-        mongo_oper.save_algorithm_to_mongo(algorithm=trained_model, collection_name="Trained_model", algorithm_name=config.name_of_model)
+        mongo_oper.save_algorithm_to_mongo(algorithm=trained_model, collection_name="trained_model", algorithm_name=config.name_of_model)
     
     except Exception as e:
         logging.error(f"Error in model training: {e}")

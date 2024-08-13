@@ -14,5 +14,5 @@ class DataTransformConfig(BaseParameters):
     """
     # PCA, LDA
     name_of_transformation: str = "PCA"
-    number_dimensions: int = 9
+    number_dimensions: int = 10
     fine_transforming: bool = True
