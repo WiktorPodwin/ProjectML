@@ -5,6 +5,9 @@ import pickle
 from typing import Union
 import gzip
 from pyspark.sql import DataFrame as SparkDataFrame
+from sklearn.base import ClassifierMixin, TransformerMixin
+from tensorflow.keras.models import Sequential
+import torch.nn as nn
 
 
 class MongoOperations:
@@ -13,7 +16,7 @@ class MongoOperations:
     """
     def __init__(self, host: str = "localhost", port: int = 27017, database: str = "classifier"):
         """
-        Initialize the MongoOperation class with a MongoDB connection
+        Initializes the MongoOperation class with a MongoDB connection
         
         Args:
             host: MongoDB host
@@ -32,7 +35,7 @@ class MongoOperations:
 
     def save_data_to_mongo(self, data: Union[pd.Series, pd.DataFrame, SparkDataFrame, dict], collection_name: str) -> None:            
         """
-        Saving data into collection
+        Saving data into MongoDB collection
 
         Args:
             data: ingested data
@@ -65,7 +68,7 @@ class MongoOperations:
 
     def read_data_from_mongo(self, collection_name: str, column_name: str = None) -> Union[pd.DataFrame, pd.Series]:
         """
-        Reading data from collection
+        Reading data from MongoDB collection
         
         Args:
             collection_name: MongoDB collection
@@ -87,14 +90,14 @@ class MongoOperations:
             logging.error(f"Error while loading data from MongoDB: {e}")
             raise e
         
-    def save_algorithm_to_mongo(self, algorithm, collection_name: str, algorithm_name: str) -> None:
+    def save_algorithm_to_mongo(self, algorithm: Union[ClassifierMixin, Sequential, TransformerMixin, nn.Module], collection_name: str, algorithm_name: str) -> None:
         """
-        Saving algorithm into collection
+        Saving algorithm into MongoDB collection
         
         Args:
-            algorithm: Algorithm to save
+            algorithm: Algorithm to save into MongoDB
             collection_name: MongoDB collection
-            algorithm_name: algorithm name
+            algorithm_name: Algorithm name
         """
         try:
             pickled_algorithm = pickle.dumps(algorithm)
@@ -106,12 +109,14 @@ class MongoOperations:
             logging.error(f"Error while saving algorithm into MongoDB: {e}")
             raise e
 
-    def read_algorithm_from_mongo(self, collection_name: str):
+    def read_algorithm_from_mongo(self, collection_name: str) -> Union[ClassifierMixin, Sequential, TransformerMixin, nn.Module]:
         """
         Reading algorithm from MongoDB
         
         Args:
             collection_name: MongoDB collection
+        Returns:
+            Union[ClassifierMixin, Sequential, TransformerMixin, nn.Module]: Loaded algorithm from MongoDB
         """
         try:
             collection = self.database[collection_name]

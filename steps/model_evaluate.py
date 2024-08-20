@@ -2,14 +2,16 @@ import logging
 import mlflow
 from zenml import step
 from zenml.client import Client
-from src import Accuracy, Recall, F1, RocAuc, ConfMatrix
+from src import Accuracy, Recall, F1, RocAuc, ConfMatrix, pytorch_prediction
 from docker_services import MongoOperations
+from .config import ModelNameConfig
+import numpy as np
 
 client = Client()
 experiment_tracker = client.active_stack.experiment_tracker
 
 @step(experiment_tracker=experiment_tracker.name, enable_cache=False)
-def evaluate_model() -> None:
+def evaluate_model(config: ModelNameConfig) -> None:
     """
     Evaluates the model on the ingested data
     """
@@ -18,11 +20,19 @@ def evaluate_model() -> None:
         X_test = mongo_oper.read_data_from_mongo("X_test")
         y_test = mongo_oper.read_data_from_mongo("y_test")
         model = mongo_oper.read_algorithm_from_mongo("trained_model")
-        prediction = model.predict(X_test)
+        config = ModelNameConfig()
 
+        if config.name_of_model == "PyTorchNeuralNetwork":
+            prediction = pytorch_prediction(model, X_test)
+        else:
+            prediction = model.predict(X_test)
+
+        if np.issubdtype(prediction.dtype, np.floating):
+            prediction = [0 if val < 0.5 else 1 for val in prediction]
+            
         accuracy_class = Accuracy()
         accuracy_val = accuracy_class.calculate_scores(y_test, prediction)
-        mlflow.log_metric("accuracy", accuracy_val)
+        mlflow.log_metric("validation_accuracy", accuracy_val)
 
         recall_class = Recall()
         recall_val = recall_class.calculate_scores(y_test, prediction)

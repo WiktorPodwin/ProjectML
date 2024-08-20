@@ -13,7 +13,7 @@ def deployment_trigger_prepare() -> float:
     try:
         mongo_oper = MongoOperations()
         accuracy_df = mongo_oper.read_data_from_mongo(
-            collection_name="Evaluation", 
+            collection_name="evaluation", 
             column_name="Accuracy"
             )
         accuracy = float(accuracy_df.iloc[0, 0])
@@ -31,7 +31,7 @@ def predictor_prepare() -> pd.DataFrame:
     """
     try:
         mongo_oper = MongoOperations()
-        data = mongo_oper.read_data_from_mongo(collection_name="Cleaned_data")
+        data = mongo_oper.read_data_from_mongo(collection_name="cleaned_data")
         standard_scaler = mongo_oper.read_algorithm_from_mongo("standard_scaler")
         X_data = data.drop(columns=["chd"])
         y_data = data['chd']

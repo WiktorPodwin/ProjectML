@@ -5,3 +5,4 @@ from .model_development import KNN, LogisticRegressionModel, RandomForestModel, 
 from .evaluation import Accuracy, F1, ConfMatrix, Recall, RocAuc
 from .data_transforming import DataStandardScaler, PCAModel, LDAModel, DataTransforming
 from .feature_importances import create_plot
+from .neural_network_development import TensorflowNeuralNetworkModel, PyTorchNeuralNetworkModel, pytorch_prediction

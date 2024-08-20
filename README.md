@@ -8,13 +8,13 @@ For a given historical medicine data, I will demonstrate, how health parameters 
 * Apache Spark: Speeds up data ingestion and cleaning operations.
 * MongoDB: Facilitates fast data operations and storage.
 * Docker: manages MongoDB and Apache Spark containers without need to install them locally
-* Python Libraries: libraries like: `numpy`, `pandas`, `scikit-learn`, `optuna`, `matplotlib` are used for data transformations, operations, applying machine learning algorithms, optimizing model hyperparameters and data visualization
+* Python Libraries: `scikit-learn`, `tensorflow`, `pytorch`, `mlflow`, `pymongo`, `pyspark`, `zenml`, `pandas`, `optuna`, `matplotlib`, `numpy`, `streamlit`
 
 ## What Elements Does the Project Have?
 * Data ingesting for loading and preparing data for further processing
 * Data cleaning to preprocess the data and make it suitable for prediction
 * Data transformations to reduce the number of dimensions in the data
-* Model training for prediction and optimizing its hyperparameters
+* Model training for deploying a machine learning model/neural network and optimizing its hyperparameters
 * Model evaluation to assess model performance and visualize feature importance
 * Model deployment to continuously predicting and deploying the model, while testing it simultaneously
 * Inference process to make prediction using a trained model on a new dataset
@@ -63,7 +63,7 @@ In  a real-world workflow we face a more difficult scenario than just training t
 This is a basic pipeline, that includes several steps, with the most important components logged into MLflow:
 - `ingest_data`: This step ingests the data and creates a DataFrame
 - `clean_data`: This step cleans the data, divides it into training and testing datasets and standardizes values
-- `transform_data`: This step extracts features using `scikit-learn` algorithms
+- `transform_data`: This step extracts features
 - `model_train`: This step trains the model and finds its hyperparameters
 - `model_evaluate`: This step evaluates the model's performance
 

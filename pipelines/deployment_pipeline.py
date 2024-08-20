@@ -11,6 +11,9 @@ from steps import ingest_df, clean_df, train_model, evaluate_model, data_transfo
 from src import deployment_trigger_prepare, predictor_prepare
 from docker_services import MongoOperations
 from sklearn.base import ClassifierMixin
+from tensorflow.keras.models import Sequential
+import torch.nn as nn
+from typing import Union
 
 docker_settings = DockerSettings(required_integrations=[MLFLOW])
 
@@ -97,15 +100,15 @@ def predictor(service: MLFlowDeploymentService) -> np.ndarray:
 
 
 @step(enable_cache=False)
-def get_model() -> ClassifierMixin:
+def get_model() -> Union[ClassifierMixin, Sequential, nn.Module]:
     """
-    Import a trained model from the MongoDB
+    Import a trained model from the MongoDB collection
     
     Returns:
-        ClassifierMixin: Trained model
+        Union[ClassifierMixin, Sequential, nn.Module]: Trained model
     """
     mongo_oper = MongoOperations()
-    model = mongo_oper.read_algorithm_from_mongo("Trained_model")
+    model = mongo_oper.read_algorithm_from_mongo("trained_model")
     return model
 
 

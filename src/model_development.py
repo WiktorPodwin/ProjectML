@@ -15,7 +15,7 @@ class Model(ABC):
     Abstract class defining model for prediction
     """
     @abstractmethod
-    def train(self, X_train, y_train):
+    def model_train(self, X_train, y_train):
         """
         Trains the model
         
@@ -43,7 +43,7 @@ class LogisticRegressionModel(Model):
     """
     Logistic Regression Model
     """
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs) -> ClassifierMixin:
+    def model_train(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs) -> ClassifierMixin:
         """
         Trains the model
         
@@ -77,7 +77,7 @@ class LogisticRegressionModel(Model):
         C = trial.suggest_float("C", 1e-4, 1e2, log=True)
         solver = trial.suggest_categorical("solver", ("lbfgs", "saga"))
         tol = trial.suggest_float("tol", 1e-5, 1e-2, log=True)
-        classifier = self.train(X_train, y_train, C=C, solver=solver, tol=tol)
+        classifier = self.model_train(X_train, y_train, C=C, solver=solver, tol=tol)
         return classifier.score(X_test, y_test)
 
 
@@ -86,7 +86,7 @@ class KNN(Model):
     K-Nearest Neighbors model
     """
 
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs) -> ClassifierMixin:
+    def model_train(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs) -> ClassifierMixin:
         """
         Trains the model
         
@@ -124,14 +124,14 @@ class KNN(Model):
         leaf_size = None
         if algorithm == "ball_tree" or "kd_tree":
             leaf_size = trial.suggest_int("leaf_size", 10, 50)
-        classifier = self.train(X_train, y_train, n_neighbors=n_neighbors, weights=weights, algorithm=algorithm, leaf_size=leaf_size)
+        classifier = self.model_train(X_train, y_train, n_neighbors=n_neighbors, weights=weights, algorithm=algorithm, leaf_size=leaf_size)
         return classifier.score(X_test, y_test)
 
 class RandomForestModel(Model):
     """
     The Random Forest Claassifier
     """
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> ClassifierMixin:
+    def model_train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> ClassifierMixin:
         """
         Trains the model
         
@@ -165,14 +165,14 @@ class RandomForestModel(Model):
          n_estimators = trial.suggest_int("n_estimators", 5, 150)
          max_depth = trial.suggest_int("max_depth", 1, 30)
          criterion = trial.suggest_categorical("criterion", ["gini", "entropy", "log_loss"])
-         classifier = self.train(X_train, y_train, n_estimators=n_estimators, max_depth=max_depth, criterion=criterion)
+         classifier = self.model_train(X_train, y_train, n_estimators=n_estimators, max_depth=max_depth, criterion=criterion)
          return classifier.score(X_test, y_test)
 
 class SVMModel(Model):
     """
     The SVM Classifier
     """
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> ClassifierMixin:
+    def model_train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> ClassifierMixin:
         """
         Trains the model
         
@@ -207,14 +207,14 @@ class SVMModel(Model):
         C = trial.suggest_float("C", 5e-2, 10, log=True)
         tol = trial.suggest_float("tol", 1e-5, 1e-1, log=True)
         gamma = trial.suggest_categorical("gamma", ["scale", "auto"])
-        classifier = self.train(X_train, y_train, C=C, tol=tol, gamma=gamma)
+        classifier = self.model_train(X_train, y_train, C=C, tol=tol, gamma=gamma)
         return classifier.score(X_test, y_test)
     
 class GaussianNBModel(Model):
     """
     The Gaussian Naive Bayes Classifier
     """
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> ClassifierMixin:
+    def model_train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> ClassifierMixin:
         """
         Trains the model
         
@@ -247,14 +247,14 @@ class GaussianNBModel(Model):
             float: accuracy score of the trained model on the test data
         """
         var_smoothing = trial.suggest_float("var_smoothing", 1e-12, 1e-8, log=True)
-        classifier = self.train(X_train, y_train, var_smoothing=var_smoothing)
+        classifier = self.model_train(X_train, y_train, var_smoothing=var_smoothing)
         return classifier.score(X_test, y_test)
     
 class BaggingModel(Model):
     """
     The Bagging Classifier
     """
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> ClassifierMixin:
+    def model_train(self, X_train: pd.DataFrame, y_train: pd.Series, **args) -> ClassifierMixin:
         """
         Trains the model
 
@@ -291,7 +291,7 @@ class BaggingModel(Model):
             oob_score = trial.suggest_categorical("oob_score", [True, False])
             max_samples = trial.suggest_float("max_samples", 0.2, 1.0)
             max_features = trial.suggest_float("max_features", 0.2, 1.0)
-            classifier = self.train(X_train, y_train, n_estimators=n_estimators, oob_score=oob_score, max_samples=max_samples, max_features=max_features)
+            classifier = self.model_train(X_train, y_train, n_estimators=n_estimators, oob_score=oob_score, max_samples=max_samples, max_features=max_features)
             scores = cross_val_score(classifier, X_train, y_train, cv=5, scoring="accuracy")
             return scores.mean()
         except Exception as e:

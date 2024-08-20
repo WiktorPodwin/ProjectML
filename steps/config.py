@@ -4,9 +4,9 @@ class ModelNameConfig(BaseParameters):
     """
     Model configuration
     """
-    # RandomForestClassifier, LogisticRegression, KNeighborsClassifier, SVM, GaussianNB, BaggingClassifier
+    # RandomForestClassifier, LogisticRegression, KNeighborsClassifier, SVM, GaussianNB, BaggingClassifier, TensorflowNeuralNetwork, PyTorchNeuralNetwork
     name_of_model: str = "RandomForestClassifier"
-    fine_tuning: bool = True
+    fine_tuning: bool = False
 
 class DataTransformConfig(BaseParameters):
     """
@@ -15,4 +15,4 @@ class DataTransformConfig(BaseParameters):
     # PCA, LDA
     name_of_transformation: str = "PCA"
     number_dimensions: int = 10
-    fine_transforming: bool = True
+    fine_transforming: bool = False
